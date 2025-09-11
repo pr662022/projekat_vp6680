@@ -7,7 +7,6 @@ namespace Common
     [DataContract]
     public class WeatherSample
     {
-        int t; int pressure; int tpot; int tdew; int vPmax; int vPdef; int vPact; DateTime date;
         public WeatherSample() { }
 
         public WeatherSample(double t, double pressure, double tpot, double tdew, double vpmax, double vpdef, double vpact, DateTime date)
