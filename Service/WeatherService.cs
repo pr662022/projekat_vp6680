@@ -71,7 +71,28 @@ namespace Service
                 throw new FaultException<ValidationFault>(new ValidationFault(error));
             }
 
-            
+            if (_previousSample != null)
+            {
+                double deltaP = Math.Abs(s.Pressure - _previousSample.Pressure);
+                if (deltaP > P_threshold)
+                    Console.WriteLine($"[Event] PressureSpike: {deltaP:+0.00;-0.00} hPa");
+
+                double deltaVPact = Math.Abs(s.VPact - _previousSample.VPact);
+                if (deltaVPact > VPact_threshold)
+                    Console.WriteLine($"[Event] VPActSpike: {deltaVPact:+0.00;-0.00}");
+
+                double deltaVPdef = Math.Abs(s.VPdef - _previousSample.VPdef);
+                if (deltaVPdef > VPdef_threshold)
+                    Console.WriteLine($"[Event] VPdefSpike: {deltaVPdef:+0.00;-0.00}");
+            }
+
+            _pValues.Add(s.Pressure);
+            _pAvg = 0;
+            foreach (var v in _pValues) _pAvg += v;
+            _pAvg /= _pValues.Count;
+
+            if (s.Pressure < 0.75 * _pAvg || s.Pressure > 1.25 * _pAvg)
+                Console.WriteLine($"[Warning] OutOfBandPressure: {s.Pressure} hPa (mean={_pAvg:0.00})");
 
             AppendMeasurement(s);
 
