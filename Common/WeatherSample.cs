@@ -9,20 +9,27 @@ namespace Common
     {
         public WeatherSample() { }
 
-        public WeatherSample(double t, double pressure, double tpot, double tdew, double vpmax, double vpdef, double vpact, DateTime date)
+        public WeatherSample(DateTime date, double pressure, double t, double tpot, double tdew, double vPmax, double vPact, double vPdef)
         {
-            T = t; Pressure = pressure; Tpot = tpot; Tdew = tdew;
-            VPmax = vpmax; VPdef = vpdef; VPact = vpact; Date = date;
+            Date = date;
+            Pressure = pressure;
+            T = t;
+            Tpot = tpot;
+            Tdew = tdew;
+            VPmax = vPmax;
+            VPact = vPact;
+            VPdef = vPdef;
         }
 
-        [DataMember] public double T { get; set; }
+        [DataMember] public DateTime Date { get; set; }
         [DataMember] public double Pressure { get; set; }
+        [DataMember] public double T { get; set; }
         [DataMember] public double Tpot { get; set; }
         [DataMember] public double Tdew { get; set; }
         [DataMember] public double VPmax { get; set; }
-        [DataMember] public double VPdef { get; set; }
         [DataMember] public double VPact { get; set; }
-        [DataMember] public DateTime Date { get; set; }
+        [DataMember] public double VPdef { get; set; }
+
     }
 
     [DataContract]
