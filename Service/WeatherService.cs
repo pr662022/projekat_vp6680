@@ -5,9 +5,12 @@ using System.ServiceModel;
 using System.Configuration;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Security.Policy;
 
 namespace Service
 {
+    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Single)]
+
     public class WeatherService : IStationService
     {
         private bool _sessionStarted = false;
@@ -19,7 +22,13 @@ namespace Service
         private List<double> _pValues = new List<double>();
         private readonly double P_threshold;
         private readonly double VPact_threshold;
-        private readonly double VPdef_threshold;
+        private readonly double VPdef_threshold;       
+
+        public event EventHandler<TransferStartedEventArgs> OnTransferStarted;
+        public event EventHandler<SampleReceivedEventArgs> OnSampleReceived;
+        public event EventHandler<TransferCompletedEventArgs> OnTransferCompleted;
+        public event EventHandler<WarningRaisedEventArgs> OnWarningRaised;
+
 
         public WeatherService()
         {
@@ -53,6 +62,8 @@ namespace Service
             _previousSample = null;
             Console.WriteLine("[Server] Prenos u toku…");
             _sessionStarted = true;
+
+            OnTransferStarted?.Invoke(this, new TransferStartedEventArgs { Meta = meta });
             return new Ack { Ok = true, Status = "IN_PROGRESS", Message = "Session started." };
         }
 
@@ -101,6 +112,7 @@ namespace Service
             if (_received % 10 == 0)
                 Console.WriteLine($"[Server] Primljeno {_received} uzoraka… (prenos u toku)");
 
+            OnSampleReceived?.Invoke(this, new SampleReceivedEventArgs { Sample = s, ReceivedCount = _received });
             return new Ack { Ok = true, Status = "IN_PROGRESS", Message = "Sample accepted." };
         }
 
@@ -109,8 +121,11 @@ namespace Service
             if (!_sessionStarted)
                 throw new FaultException<ValidationFault>(new ValidationFault("No active session to end."));
 
+            
             _sessionStarted = false;
             Console.WriteLine($"[Server] Završen prenos. Ukupno primljeno: {_received}.");
+
+            OnTransferCompleted?.Invoke(this, new TransferCompletedEventArgs { TotalReceived = _received });
             return new Ack { Ok = true, Status = "COMPLETED", Message = "Session completed." };
         }
 
@@ -135,4 +150,9 @@ namespace Service
             }
         }
     }
+
+    public class TransferStartedEventArgs : EventArgs { public SessionMeta Meta { get; set; } }
+    public class SampleReceivedEventArgs : EventArgs { public WeatherSample Sample { get; set; } public int ReceivedCount { get; set; } }
+    public class TransferCompletedEventArgs : EventArgs { public int TotalReceived { get; set; } }
+    public class WarningRaisedEventArgs : EventArgs { public string Kind { get; set; } public string Direction { get; set; } public double Value { get; set; } public double Threshold { get; set; } public string Message { get; set; } }
 }
